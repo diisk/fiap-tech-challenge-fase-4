@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kong-migrations-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: kong-migrations-pod
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z kong-database-svc 5432; do echo waiting for postgres; sleep 2; done;",
+            ]
+      containers:
+        - name: kong-migrations-pod
+          image: kong:latest
+          imagePullPolicy: IfNotPresent
+          command: ["kong", "migrations", "bootstrap"]
+          env:
+            - name: KONG_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: kong-configmap
+                  key: KONG_DATABASE
+            - name: KONG_PG_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: kong-configmap
+                  key: KONG_PG_HOST
+            - name: KONG_PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: kong-secret
+                  key: POSTGRES_USER
+            - name: KONG_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kong-secret
+                  key: POSTGRES_PASSWORD
+
+      restartPolicy: OnFailure
+  backoffLimit: 4

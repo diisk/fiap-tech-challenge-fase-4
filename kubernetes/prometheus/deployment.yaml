@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-svc
+spec:
+  selector:
+    app: prometheus-pod
+  ports:
+    - name: prometheus-port
+      port: 9090
+      targetPort: 9090
+      nodePort: 30090
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-pod
+  template:
+    metadata:
+      name: prometheus-pod
+      labels:
+        app: prometheus-pod
+    spec:
+      containers:
+        - name: prometheus
+          image: prometheus-custom-image
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9090

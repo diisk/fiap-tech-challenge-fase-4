@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: contatos-mysql-svc
+  labels:
+    app: contatos-mysql-svc
+spec:
+  ports:
+    - port: 3306
+      name: contatos-mysql
+  clusterIP: None
+  selector:
+    app: contatos-mysql-pod
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: contatos-mysql-statefulset
+spec:
+  serviceName: contatos-mysql-svc
+  replicas: 1
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app: contatos-mysql-pod
+  template:
+    metadata:
+      labels:
+        app: contatos-mysql-pod
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: contatos-mysql-pod
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: DB_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-configmap
+                  key: DB_DATABASE
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          volumeMounts:
+            - name: contatos-mysql-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: contatos-mysql-storage
+          persistentVolumeClaim:
+            claimName: contatos-mysql-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: contatos-mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi

@@ -1,0 +1,8 @@
+# Use the latest curl image as the base
+FROM curlimages/curl:latest
+
+# Copy the setup script into the container
+COPY kong-setup.sh /kong-setup.sh
+
+# Set the entrypoint to execute the setup script
+ENTRYPOINT ["/bin/sh", "-c", "/kong-setup.sh"]

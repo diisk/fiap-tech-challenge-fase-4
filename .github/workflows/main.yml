@@ -1,0 +1,174 @@
+name: .NET API CI
+
+on: 
+  push:
+  workflow_dispatch:
+
+jobs:
+  auth-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./auth-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+  auth-unit-tests:
+    needs: auth-build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./auth-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Run unit tests
+      run: dotnet test --filter "Category=Unit" --configuration Release --verbosity normal
+
+  auth-integration-tests:
+    needs: auth-unit-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./auth-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Run integration tests
+      run: dotnet test --filter "Category=Integration" --configuration Release --verbosity normal
+  
+  areas-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./areas-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+  areas-unit-tests:
+    needs: areas-build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./areas-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Run unit tests
+      run: dotnet test --filter "Category=Unit" --configuration Release --verbosity normal
+
+  areas-integration-tests:
+    needs: areas-unit-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./areas-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Run integration tests
+      run: dotnet test --filter "Category=Integration" --configuration Release --verbosity normal
+
+  contatos-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contatos-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+  contatos-unit-tests:
+    needs: contatos-build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contatos-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Run unit tests
+      run: dotnet test --filter "Category=Unit" --configuration Release --verbosity normal
+
+  contatos-integration-tests:
+    needs: contatos-unit-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./contatos-api
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Run integration tests
+      run: dotnet test --filter "Category=Integration" --configuration Release --verbosity normal

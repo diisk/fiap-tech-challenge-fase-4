@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["MicroservicosContatoAPI.sln", "."]
+COPY ["API/API.csproj", "API/"]
+COPY ["Application/Application.csproj", "Application/"]
+COPY ["Domain/Domain.csproj", "Domain/"]
+COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["Application.Test/Application.Test.csproj", "Application.Test/"]
+RUN dotnet restore
+
+COPY . .
+
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+ENTRYPOINT ["sh", "-c", "dotnet ef database update --context OnlyReadDbContext --project Infrastructure/Infrastructure.csproj --startup-project API/API.csproj"]

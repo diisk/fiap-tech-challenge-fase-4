@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kong-setup-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: kong-setup-pod
+    spec:
+      initContainers:
+        - name: wait-for-kong
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z kong-svc 8001; do echo waiting for kong; sleep 2; done;",
+            ]
+      containers:
+        - name: kong-setup-pod
+          image: kong-setup-image
+          imagePullPolicy: Never 
+      restartPolicy: OnFailure
+  backoffLimit: 4

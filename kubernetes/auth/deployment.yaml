@@ -1,0 +1,80 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: auth-api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: auth-api-deployment
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-api-svc
+spec:
+  type: NodePort
+  externalTrafficPolicy: Cluster
+  selector:
+    app: auth-api-pod
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30007
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-api-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-api-pod
+  template:
+    metadata:
+      labels:
+        app: auth-api-pod
+    spec:
+      initContainers:
+        - name: wait-for-rabbitmq
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z rabbitmq-svc 5672; do echo waiting for rabbitmq; sleep 2; done;",
+            ]
+      containers:
+        - name: auth-api-pod
+          image: auth-api-image
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: "RABBITMQ_HOST"
+              value: "$(RABBITMQ_HOST)"
+            - name: "ASPNETCORE_ENVIRONMENT"
+              value: "$(ASPNETCORE_ENVIRONMENT)"
+            - name: "ConnectionStrings__ConnectionString"
+              value: "Server=auth-mysql-svc;Database=$(DB_DATABASE);User=$(DB_USER);Password=$(DB_PASSWORD);Port=$(DB_PORT);"
+          envFrom:
+            - configMapRef:
+                name: api-configmap
+            - configMapRef:
+                name: mysql-configmap
+            - secretRef:
+                name: mysql-secret
+          resources:
+            requests:
+              cpu: "10m"

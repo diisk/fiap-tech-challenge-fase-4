@@ -1,0 +1,43 @@
+services:
+  areas-migrations:
+    build:
+      context: ./areas-api/
+      dockerfile: dockerfile-migrations
+    image: areas-migrations-image
+
+  areas-api:
+    build:
+      context: ./areas-api/
+    image: areas-api-image
+
+  auth-migrations:
+    build:
+      context: ./auth-api/
+      dockerfile: dockerfile-migrations
+    image: auth-migrations-image
+
+  auth-api:
+    build:
+      context: ./auth-api/
+    image: auth-api-image
+
+  contatos-migrations:
+    build:
+      context: ./contatos-api/
+      dockerfile: dockerfile-migrations
+    image: contatos-migrations-image
+
+  contatos-api:
+    build:
+      context: ./contatos-api/
+    image: contatos-api-image
+
+  prometheus-custom:
+    build:
+      context: ./prometheus/
+    image: prometheus-custom-image
+
+  kong-setup:
+    build:
+      context: ./kong/
+    image: kong-setup-image

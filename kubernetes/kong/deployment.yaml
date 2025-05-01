@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-svc
+spec:
+  selector:
+    app: kong-pod
+  ports:
+    - name: proxy
+      port: 8000
+      targetPort: 8000
+    - name: proxy-ssl
+      port: 8443
+      targetPort: 8443
+    - name: admin
+      port: 8001
+      targetPort: 8001
+    - name: admin-ssl
+      port: 8444
+      targetPort: 8444
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong-pod
+  template:
+    metadata:
+      labels:
+        app: kong-pod
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z kong-database-svc 5432; do
+                echo "Waiting for kong-database-svc to be ready...";
+                sleep 2;
+              done;
+              echo "Database is ready. Waiting 10 seconds...";
+              sleep 10;
+      containers:
+        - name: kong
+          image: kong:latest
+          ports:
+            - containerPort: 8000
+            - containerPort: 8443
+            - containerPort: 8001
+            - containerPort: 8444
+          envFrom:
+            - configMapRef:
+                name: kong-configmap
+          env:
+            - name: KONG_PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: kong-secret
+                  key: POSTGRES_USER
+            - name: KONG_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kong-secret
+                  key: POSTGRES_PASSWORD
+          imagePullPolicy: IfNotPresent

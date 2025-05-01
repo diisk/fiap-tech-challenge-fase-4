@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: auth-migrations-job
+spec:
+  template:
+    metadata:
+      labels:
+        app: auth-migrations-pod
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z auth-mysql-svc 3306; do echo waiting for mysql; sleep 2; done;",
+            ]
+      containers:
+        - name: auth-migrations-pod
+          image: auth-migrations-image
+          imagePullPolicy: Never
+          env:
+            - name: "ASPNETCORE_ENVIRONMENT"
+              value: "$(ASPNETCORE_ENVIRONMENT)"
+            - name: "ConnectionStrings__ConnectionString"
+              value: "Server=auth-mysql-svc;Database=$(DB_DATABASE);User=$(DB_USER);Password=$(DB_PASSWORD);Port=$(DB_PORT);"
+          envFrom:
+            - configMapRef:
+                name: mysql-configmap
+            - secretRef:
+                name: mysql-secret
+      restartPolicy: OnFailure
+  backoffLimit: 4
