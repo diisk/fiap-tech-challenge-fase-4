@@ -9,8 +9,7 @@ spec:
     - name: grafana-port
       port: 3000
       targetPort: 3000
-      nodePort: 30000
-  type: NodePort
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment

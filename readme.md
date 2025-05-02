@@ -5,25 +5,39 @@
 Antes de iniciar, certifique-se de ter:
 
 - Docker instalado em sua máquina
+- Um cluster Kubernetes configurado (preferencialmente o Docker Desktop, pois o projeto foi desenvolvido com ele)
 - As seguintes portas disponíveis em seu sistema:
   - 8080 (API)
-  - 9090 (Prometheus)
+  - 30090 (Prometheus)
   - 3000 (Grafana)
-  - 3307 (MySQL)
+  - 31572 e 31672 (RabbitMQ)
+  - 30009 (Contatos API)
+  - 30007 (Auth API)
+  - 30008 (Areas API)
+
+## Observações sobre as portas
+
+- As portas expostas acima de 30000 (RabbitMQ, Prometheus, APIs) são configuradas como serviços do tipo NodePort. Em um ambiente de produção, essas portas não estariam expostas diretamente.
 
 ## Iniciando o Projeto
 
-1. No diretório raiz do projeto, execute o seguinte comando para iniciar todos os serviços:
+1. Certifique-se de que o cluster Kubernetes está ativo.
+
+2. No diretório `kubernetes`, execute o script `install-metrics-server.sh` no Git Bash para instalar o Metrics Server, ou execute os comandos do script manualmente no PowerShell.
+
+3. No diretório raiz do projeto, execute o seguinte comando para construir as imagens Docker que serão usadas no cluster:
 
 ```bash
-docker compose up --build -d
+docker compose build
 ```
 
-Este comando irá construir e iniciar os seguintes containers:
-- API
-- MySQL
-- Prometheus
-- Grafana
+4. Após construir as imagens, aplique as configurações do Kubernetes com o comando:
+
+```bash
+kubectl apply -f ./kubernetes --recursive
+```
+
+Este comando irá aplicar todas as configurações do Kubernetes definidas na pasta `kubernetes`.
 
 ## Configurando o Grafana
 
@@ -42,7 +56,7 @@ Senha: admin
    - Acesse as configurações de Data Sources
    - Clique em "Add new data source"
    - Selecione "Prometheus"
-   - No campo URL, insira: `http://prometheus:9090`
+   - No campo URL, insira: `http://prometheus-svc:9090`
    - Clique em "Save & Test"
 
 4. Importe o dashboard pré-configurado:
